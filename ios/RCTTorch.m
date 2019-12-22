@@ -13,7 +13,7 @@
 
 RCT_EXPORT_MODULE()
 
-RCT_EXPORT_METHOD(switchState:(BOOL *)newState)
+RCT_EXPORT_METHOD(switchState:(BOOL *)newState requestedBrightness:(nonnull NSNumber *)requestedBrightness)
 {
     if ([AVCaptureDevice class]) {
         AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
@@ -21,7 +21,17 @@ RCT_EXPORT_METHOD(switchState:(BOOL *)newState)
             [device lockForConfiguration:nil];
 
             if (newState) {
-                [device setTorchMode:AVCaptureTorchModeOn];
+                float brightnessLevel = AVCaptureMaxAvailableTorchLevel;
+                
+                if (requestedBrightness != nil) {
+                    float requestedBrightnessLevel = [requestedBrightness floatValue];
+                    
+                    if (requestedBrightnessLevel > 0.0 && requestedBrightnessLevel < 1.0) {
+                        brightnessLevel = requestedBrightnessLevel;
+                    }
+                }
+
+                [device setTorchModeOnWithLevel:brightnessLevel error: nil];
             } else {
                 [device setTorchMode:AVCaptureTorchModeOff];
             }
